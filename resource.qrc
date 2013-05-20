@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>bullet_blue.png</file>
+        <file>final.html</file>
+    </qresource>
+</RCC>

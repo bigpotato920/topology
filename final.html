@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
+#l-map{height:100%;width:78%;float:left;border-right:2px solid #bcbcbc;}
+#r-result{height:100%;width:20%;float:left;}
+</style>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v1.5&ak=4c1cd912246d72a1fb6d94f68f302166"></script>
+<script type="text/javascript" src="http://developer.baidu.com/map/jsdemo/demo/convertor.js"></script>
+<title>百度地图的Hello, World</title>
+</head>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script language=javascript type="text/javascript">
+
+
+//真实经纬度转成百度坐标,并对每个点添加点击事件
+function gpstobaidu(point, index)
+{
+    BMap.Convertor.translate(point,0, function(){
+        var marker = new BMap.Marker(point, {icon:myIcon});
+
+        map.addOverlay(marker);
+        marker.addEventListener("click", function(){
+            Coordinate.getPointIndex(index);
+        });
+        map.setCenter(point);
+    }); 
+}
+
+function drawArrow(polyline,length,angleValue){ //绘制箭头的函数
+    var linePoint=polyline.getPath();//线的坐标串
+    var arrowCount=linePoint.length;
+ 
+    for(var i =1;i<arrowCount;i++){ //在拐点处绘制箭头
+        var pixelStart=map.pointToPixel(linePoint[i-1]);
+        var pixelEnd=map.pointToPixel(linePoint[i]);
+        var angle=angleValue;//箭头和主线的夹角
+        var r=length; // r/Math.sin(angle)代表箭头长度
+        var delta=0; //主线斜率，垂直时无斜率
+        var param=0; //代码简洁考虑
+        var pixelTemX,pixelTemY;//临时点坐标
+        var pixelX,pixelY,pixelX1,pixelY1;//箭头两个点
+        if(pixelEnd.x-pixelStart.x==0){ //斜率不存在是时
+            pixelTemX=pixelEnd.x;
+            if(pixelEnd.y>pixelStart.y)
+            {
+                pixelTemY=pixelEnd.y-r;
+            }
+            else
+            {
+            pixelTemY=pixelEnd.y+r;
+            }   
+            //已知直角三角形两个点坐标及其中一个角，求另外一个点坐标算法
+            pixelX=pixelTemX-r*Math.tan(angle); 
+            pixelX1=pixelTemX+r*Math.tan(angle);
+            pixelY=pixelY1=pixelTemY;
+        }
+        else  //斜率存在时
+        {
+            delta=(pixelEnd.y-pixelStart.y)/(pixelEnd.x-pixelStart.x);
+            param=Math.sqrt(delta*delta+1);
+
+            if((pixelEnd.x-pixelStart.x)<0) //第二、三象限
+            {
+                pixelTemX=pixelEnd.x+ r/param;
+                pixelTemY=pixelEnd.y+delta*r/param;
+            }
+            else//第一、四象限
+            {
+                pixelTemX=pixelEnd.x- r/param;
+                pixelTemY=pixelEnd.y-delta*r/param;
+            }
+            //已知直角三角形两个点坐标及其中一个角，求另外一个点坐标算法
+            pixelX=pixelTemX+ Math.tan(angle)*r*delta/param;
+            pixelY=pixelTemY-Math.tan(angle)*r/param;
+
+            pixelX1=pixelTemX- Math.tan(angle)*r*delta/param;
+            pixelY1=pixelTemY+Math.tan(angle)*r/param;
+        }
+
+        var pointArrow=map.pixelToPoint(new BMap.Pixel(pixelX,pixelY));
+        var pointArrow1=map.pixelToPoint(new BMap.Pixel(pixelX1,pixelY1));
+        var Arrow = new BMap.Polyline([
+            pointArrow,
+            linePoint[i],
+            pointArrow1], 
+            {strokeColor:"green", strokeWeight:6, strokeOpacity:0.5});
+        map.addOverlay(Arrow);
+    }
+}
+
+function drawPolyLine() {
+    var polyline = new BMap.Polyline([
+        new BMap.Point(ew[0], ns[0]),
+        new BMap.Point(ew[1], ns[1]),
+        new BMap.Point(ew[2], ns[2]),
+        new BMap.Point(ew[3], ns[3])
+        ], {strokeColor:"green", strokeWeight:6, strokeOpacity:0.5});
+    map.addOverlay(polyline);
+
+    drawArrow(polyline,5,Math.PI/5);
+}
+
+
+var map = new BMap.Map("allmap");            // 创建Map实例
+var FirstPoint = new BMap.Point(116.404, 39.915);// 创建初始点坐标
+var zoomLevel = 5;
+map.centerAndZoom(FirstPoint,zoomLevel);        // 初始化地图,设置中心点坐标和地图级别。
+map.enableScrollWheelZoom(true); //启用滚轮放大缩小
+var opts = {type: BMAP_NAVIGATION_CONTROL_LARGE} 
+map.addControl(new BMap.NavigationControl(opts));//平移缩放控件
+
+var myIcon = new BMap.Icon("bullet_blue.png", new BMap.Size(32, 32));
+var ns=new Array();
+var ew=new Array();
+var i;
+var n=Coordinate.getCount();
+for(i=0;i<n;i++)
+{
+    ns[i]=Coordinate.getLat(i);
+    ew[i]=Coordinate.getLon(i);
+}
+
+i=0;
+while(i<n)
+{
+    var point = new BMap.Point(ew[i],ns[i]);//  创建点坐标                        
+    //坐标转换完之后加标记
+    gpstobaidu(point, i);
+    i++;
+}
+
+drawPolyLine();
+
+
+</script>
