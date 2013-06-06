@@ -6,6 +6,8 @@
 
 QT       += core gui
 QT       += webkit
+QT       += network
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Topology
@@ -13,13 +15,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        toplogydialog.cpp \
-    coordinate.cpp
+        topologydialog.cpp \
+    info.cpp
 
-HEADERS  += toplogydialog.h \
-    coordinate.h
+HEADERS  += topologydialog.h \
+    info.h
 
-FORMS    += toplogydialog.ui
+FORMS    += topologydialog.ui
 
 RESOURCES += \
     resource.qrc
